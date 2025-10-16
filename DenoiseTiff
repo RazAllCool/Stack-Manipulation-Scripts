@@ -1,0 +1,72 @@
+import numpy as np
+import tifffile as tiff
+from tkinter import Tk, filedialog, Label, Entry, Button
+from tqdm import tqdm
+from skimage.restoration import denoise_tv_chambolle
+import os
+import cv2
+
+def select_file():
+    root = Tk()
+    root.withdraw()
+    file_path = filedialog.askopenfilename(
+        filetypes=[("TIFF files", "*.tif"), ("All files", "*.*")]
+    )
+    root.destroy()
+    return file_path
+
+def apply_tv_denoising(images, weight):
+    denoised_images = []
+    for i, frame in enumerate(tqdm(images, desc="Applying TV denoising")):
+        denoised_frame = denoise_tv_chambolle(frame, weight=weight)
+        denoised_images.append(denoised_frame)
+    return np.array(denoised_images)
+
+def process_tiff(file_path, weight):
+    images = tiff.imread(file_path)
+    if images.ndim == 2:
+        images = images[np.newaxis, ...]
+
+    print(f"Loaded {len(images)} frames")
+
+    denoised_images = apply_tv_denoising(images, weight)
+
+    base, ext = os.path.splitext(file_path)
+    output_path = f"{base}_DENOISED.tif"
+    tiff.imwrite(output_path, denoised_images.astype(np.float32), photometric='minisblack')
+    print(f"Denoised images saved to {output_path}")
+
+    cv2.imshow('Final Denoised Image', denoised_images[0])
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+def main():
+    file_path = select_file()
+    if not file_path:
+        print("No file selected. Exiting.")
+        return
+
+    root = Tk()
+    root.title("TV Denoising Parameters")
+
+    weight_label = Label(root, text="Denoising Weight:")
+    weight_label.grid(row=0, column=0)
+    weight_entry = Entry(root)
+    weight_entry.grid(row=0, column=1)
+    weight_entry.insert(0, "0.1")  # Suggested value
+
+    def on_apply():
+        weight = float(weight_entry.get())
+        print(f"Applying TV denoising with weight={weight}")
+        process_tiff(file_path, weight)
+
+    apply_button = Button(root, text="Apply Changes", command=on_apply)
+    apply_button.grid(row=1, column=0)
+
+    continue_button = Button(root, text="Continue", command=on_apply)  # Use same function for simplicity
+    continue_button.grid(row=1, column=1)
+
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()
