@@ -7,3 +7,5 @@ into trajectories.
 >RegisterAVideo: Fixes shakycam-- isn't nearly as good as just using MutliStackRegistration or other on FIJI, but I didn't know that was available and all I had was a hammer
 >
 >DenoiseTiff: Much like my registration script, I was unaware FIJI was going to solve all my problems, and I knew how to learn python. This one uses total variation denoising, which does a good job of preserving edges IMO
+>
+>DecompressanAVI: It decompresses AVIs. I don't remember why I needed that but here it is...
